@@ -191,6 +191,7 @@ static void demo_dm_recv_handler(void *dm_handle, const aiot_dm_recv_t *recv, vo
                 msg.data.sync_service_reply.code = 200;
                 msg.data.sync_service_reply.service_id = "SetLightSwitchTimer";
                 msg.data.sync_service_reply.data = "{}";
+                int32_t res = aiot_dm_send(dm_handle, &msg);
                 if (res < 0) {
                     printf("aiot_dm_send failed\r\n");
                 }
@@ -400,6 +401,7 @@ void mqtt_pub_customize_topic(void *mqtt_handle, char *dn)
     strcat(pub_topic, dn);
     strcat(pub_topic, "/usr/test");
     strcat(pub_topic, "/usr/test");
+    strcat(pub_topic, "/usr/test");
     char *pub_payload = "{\"id\":\"1\",\"version\":\"1.0\",\"params\":{\"LightSwitch\":0}}";
 
     res = aiot_mqtt_pub(mqtt_handle, pub_topic, (uint8_t *)pub_payload, (uint32_t)strlen(pub_payload), 0);
@@ -431,8 +433,14 @@ void signal_init()
 
 int main(int argc, char *argv[])
 {
-	void *mqtt_handle = mqtt_init("a1vZTRTxXyE", argv[1], argv[2]);
-	//void *dm_handle = NULL;
+	if( argc != 3 ){
+		return -1;
+	}	
+	char *device = argv[1];
+	char *secret = argv[2];
+	
+	
+	void *mqtt_handle = mqtt_init("a1vZTRTxXyE", device, secret);
 	void *dm_handle = dm_init(mqtt_handle);
 	
     /* 与服务器建立MQTT连接 */

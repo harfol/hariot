@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 
 
 
@@ -23,4 +23,3 @@ do
     esac
 done
 job_pids=$(ps -a | grep mqtt-basic | cut -d ' ' -f1)
-
