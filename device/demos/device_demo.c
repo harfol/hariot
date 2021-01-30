@@ -430,7 +430,6 @@ void signal_init()
 */
 
 
-
 int main(int argc, char *argv[])
 {
 	if( argc != 3 ){

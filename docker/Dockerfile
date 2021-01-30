@@ -2,10 +2,10 @@
 FROM mysql:5.7
 MAINTAINER harfol 1148706823@qq.com
 
-COPY device-admin.sql /schema/device-admin.sql
+WORKDIR /sql
+COPY schema .
+ENV MYSQL_ALLOW_EMPTY_PASSWORD yes
 
-ENV MYSQL_ROOT_PASSWORD=123456
-RUN echo $MYSQL_ROOT_PASSWORD
-ENTRYPOINT ["/usr/sbin/mysqld"]
-CMD ["/usr/bin/mysql", "--host=localhost", "--user=root", "--password=123456", "</schema/device-admin.sql"]
- 
+CMD ["bash", "/sql/admin-setup.sh"]  
+
+
