@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h> 
 #include <pthread.h>
 
 #include "aiot_state_api.h"
@@ -20,7 +21,8 @@ static pthread_t g_mqtt_process_thread;
 static pthread_t g_mqtt_recv_thread;
 static uint8_t g_mqtt_process_thread_running = 0;
 static uint8_t g_mqtt_recv_thread_running = 0;
-
+static uint16_t ala_tmp = 360;
+static uint16_t cur_tmp = 340;
 
 int32_t demo_state_logcb(int32_t code, char *message)
 {
@@ -380,10 +382,11 @@ void *dm_init(void *mqtt_handle)
 	return dm_handle;
 }
 
-void mqtt_sub_customize_topic(void *mqtt_handle, char *dn)
+void mqtt_sub_customize_topic(void *mqtt_handle, char *pk, char *dn)
 {
     int32_t     res = STATE_SUCCESS;
-	char sub_topic[100] = "/a1vZTRTxXyE/";
+	char sub_topic[100] = {'\0'};
+	strcat(sub_topic, pk);
     strcat(sub_topic, dn);
     strcat(sub_topic, "/usr/test");
     res = aiot_mqtt_sub(mqtt_handle, sub_topic, NULL, 1, NULL);
@@ -394,13 +397,12 @@ void mqtt_sub_customize_topic(void *mqtt_handle, char *dn)
     }
 }
 
-void mqtt_pub_customize_topic(void *mqtt_handle, char *dn)
+void mqtt_pub_customize_topic(void *mqtt_handle, char *pk, char *dn)
 {
     int32_t     res = STATE_SUCCESS;
-	char pub_topic[100] = "/a1vZTRTxXyE/";
+	char pub_topic[100] = {'\0'};
+	strcat(pub_topic, pk);
     strcat(pub_topic, dn);
-    strcat(pub_topic, "/usr/test");
-    strcat(pub_topic, "/usr/test");
     strcat(pub_topic, "/usr/test");
     char *pub_payload = "{\"id\":\"1\",\"version\":\"1.0\",\"params\":{\"LightSwitch\":0}}";
 
@@ -411,37 +413,43 @@ void mqtt_pub_customize_topic(void *mqtt_handle, char *dn)
     }
 }
 
-/*
 void signal_catch(int signo)
 {
 	switch(signo)
 	{
-		case SIG_POWER_LOW :
+		case 10 :
 		{
-			demo_send_event_post(dm_handle, "Error", "{\"ErrorCode\": 0}");
-		}
+			cur_tmp+=10;
+		};break;
+		case 12:
+		{
+			cur_tmp-=10;
+		};break;
+		default : break;
 	}
 }
 
 void signal_init()
 {
-	signal()
+	signal(SIGUSR1, signal_catch);
+	signal(SIGUSR2, signal_catch);
 }
-*/
 
 
 int main(int argc, char *argv[])
 {
-	if( argc != 3 ){
+	if( argc != 4 ){
+		printf("[1] %s, [2] %s, [3] %s\n", argv[1], argv[2], argv[3]);
 		return -1;
 	}	
-	char *device = argv[1];
-	char *secret = argv[2];
+	char *product = argv[1];
+	char *device = argv[2];
+	char *secret = argv[3];
 	
 	
-	void *mqtt_handle = mqtt_init("a1vZTRTxXyE", device, secret);
+	void *mqtt_handle = mqtt_init(product, device, secret);
 	void *dm_handle = dm_init(mqtt_handle);
-	
+	signal_init();
     /* 与服务器建立MQTT连接 */
     int32_t res = aiot_mqtt_connect(mqtt_handle);
     if (res < STATE_SUCCESS) {
@@ -467,18 +475,32 @@ int main(int argc, char *argv[])
     }
     
     
-	mqtt_sub_customize_topic(mqtt_handle, argv[1]);
-	mqtt_pub_customize_topic(mqtt_handle, argv[1]);
-	demo_send_property_post(dm_handle, "{\"LightSwitch\": 1}");
-	demo_send_event_post(dm_handle, "LowBatteyEvent", "{\"BatteryLevel\": 50}");
+	// mqtt_sub_customize_topic(mqtt_handle, product, device_secret);
+	// mqtt_pub_customize_topic(mqtt_handle, product, device_secret);
+    // demo_send_property_post(dm_handle, "{\"CurrentTemperature\": 360, \"CurrentHumidity\": 95 }");
+	// demo_send_event_post(dm_handle, "LowBatteyEvent", "{\"BatteryLevel\": 50}");
+	// demo_send_event_post(dm_handle, "HighEnvironmentTempWarning", "{\"CurrentTemperature\": 500 }");
     /* 主循环进入休眠 */
     while (1) {
+		static uint16_t old_tmp = 0;
         /* TODO: 以下代码演示了简单的属性上报和事件上报, 用户可取消注释观察演示效果 */
         /*
         demo_send_property_post(dm_handle, "{\"LightSwitch\": 0}");
         demo_send_event_post(dm_handle, "Error", "{\"ErrorCode\": 0}");
         */
-
+		if( cur_tmp != old_tmp )
+		{
+			char tmp[100] = {'\0'};
+			sprintf(tmp, "{\"CurrentTemperature\": %d, \"CurrentHumidity\": 95 }", cur_tmp);
+    		demo_send_property_post(dm_handle, tmp);
+			old_tmp = cur_tmp;
+		}
+		if( cur_tmp >= ala_tmp )
+		{
+			char tmp[100] = {'\0'};
+			sprintf(tmp, "{\"CurrentTemperature\": %d }", cur_tmp);
+			demo_send_event_post(dm_handle, "HighEnvironmentTempWarning", tmp);
+		}
         sleep(10);
     }
 

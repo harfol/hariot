@@ -1,25 +1,12 @@
-!/bin/bash
+#!/bin/bash
 
 
-
-dm_name=mqtt-basic-sp-demo
-sp_name=mqtt-basic-sp-demo
-id=(${1//-/ })
-action=$2
-
-
-
-for i in $id
+pk=$(jq .Product.Key <../my_secret.json)
+mkdir -p $PWD/output/logs
+for i in {0..9}
 do
-    case $action in
-    dm)
-        ${PWD}/output/$dm_name  >device_$i.txt 2>&1 &
-        ;;
-    sp)
-        ${PWD}/output/$sp_name  >device_$i.txt 2>&1 &
-        ;;
-    *)
-        ;;
-    esac
+	dn=$(jq .Devices[$i].Name <../my_secret.json)
+	ds=$(jq .Devices[$i].Secret <../my_secret.json)
+	echo -e "$1 device-demo ${pk//\"/ } ${dn//\"/ } ${ds//\"/ }"
+	${PWD}/output/device-demo ${pk//\"/ } ${dn//\"/ } ${ds//\"/ } &>${PWD}/output/logs/device-demo-$i.txt &
 done
-job_pids=$(ps -a | grep mqtt-basic | cut -d ' ' -f1)
