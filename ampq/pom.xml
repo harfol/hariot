@@ -10,7 +10,7 @@
   <name>ampq</name>
   <url>http://maven.apache.org</url>
 
-  <properties>
+<properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target> 
@@ -24,7 +24,7 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
-<!-- amqp 1.0 qpid client -->
+    <!-- amqp 1.0 qpid client -->
     <dependency>
         <groupId>org.apache.qpid</groupId>
         <artifactId>qpid-jms-client</artifactId>
@@ -56,4 +56,48 @@
         <type>jar</type>
     </dependency>
   </dependencies>
+  <build>
+	<plugins>
+	  <!-- mainclass -->
+		<!--
+	  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.2.0</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>org.hariot.ampq.App</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+			</plugin>
+		-->
+             <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                    <archive>
+                        <manifest>
+							<mainClass>org.hariot.ampq.App</mainClass>
+                        </manifest>
+                    </archive>
+               </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+	</plugins>
+</build>
 </project>
