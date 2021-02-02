@@ -2,12 +2,13 @@ package org.hariot.admin.service;
 
 import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.iot.model.v20180120.QueryDevicePropertyStatusResponse;
+import com.aliyuncs.CommonResponse;
 
 import java.util.List;
 
 public interface AliyunDeviceService {
 
-    List<QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo> queryDevicePro(String deviceName) throws ClientException;
+    List<CommonResponse> queryDevicePro(String deviceName) throws ClientException;
 
     Boolean setDeviceProperty(String deviceName, String name, String value) throws ClientException;
 

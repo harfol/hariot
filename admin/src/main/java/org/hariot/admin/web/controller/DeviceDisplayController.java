@@ -75,7 +75,7 @@ public class DeviceDisplayController {
         return new BaseResp<>(0, "success",alarmHistoryLogs);
     }
 
-   /*//Alink方式修改设备报警阀值，如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
+   //Alink方式修改设备报警阀值，如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
     @RequestMapping(value = "/api/v1/device/setDeviceProperty",method = RequestMethod.GET)
     public @ResponseBody BaseResp setDeviceProperty(String deviceName, Integer tempThreshold) {
         Boolean b = null;
@@ -86,9 +86,9 @@ public class DeviceDisplayController {
         }
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
-        return new BaseResp<>(0, "success",map); }*/
-
-   //透传方式修改设备报警阀值 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
+        return new BaseResp<>(0, "success",map); }
+	
+    /*//透传方式修改设备报警阀值 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
     @RequestMapping(value = "/api/v1/device/setDeviceProperty",method = RequestMethod.GET)
     public @ResponseBody BaseResp setDeviceProperty(String deviceName, Float tempThreshold) {
         Boolean b = null;
@@ -104,8 +104,8 @@ public class DeviceDisplayController {
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
         return new BaseResp<>(0, "success",map); }
-
-   /*//Alink方式设备报警状态取消 如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
+	*/
+   //Alink方式设备报警状态取消 如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
    @RequestMapping(value = "/api/v1/device/clearAlarm",method = RequestMethod.GET)
     public @ResponseBody BaseResp clearAlarm(String deviceName) {
         Boolean b = null;
@@ -119,9 +119,9 @@ public class DeviceDisplayController {
         }
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
-        return new BaseResp<>(0, "success",map);}*/
+        return new BaseResp<>(0, "success",map);}
 
-    //透传方式设备报警状态取消 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
+    /*//透传方式设备报警状态取消 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
     @RequestMapping(value = "/api/v1/device/clearAlarm",method = RequestMethod.GET)
     public @ResponseBody BaseResp clearAlarm(String deviceName) {
         Boolean b = null;
@@ -135,7 +135,7 @@ public class DeviceDisplayController {
         }
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
-        return new BaseResp<>(0, "success",map); }
+        return new BaseResp<>(0, "success",map); }*/
 
 
 

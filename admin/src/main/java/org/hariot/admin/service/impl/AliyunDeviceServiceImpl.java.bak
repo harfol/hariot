@@ -1,24 +1,18 @@
 package org.hariot.admin.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.aliyuncs.DefaultAcsClient;
+import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.http.FormatType;
-// import com.aliyuncs.iot.model.v20180120.*;
-// import com.aliyuncs.profile.IClientProfile;
+import com.aliyuncs.iot.model.v20180120.*;
+import com.aliyuncs.profile.DefaultProfile;
+import com.aliyuncs.profile.IClientProfile;
 import org.hariot.admin.service.AliyunDeviceService;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.aliyuncs.CommonRequest;
-import com.aliyuncs.CommonResponse;
-import com.aliyuncs.DefaultAcsClient;
-import com.aliyuncs.IAcsClient;
-import com.aliyuncs.exceptions.ClientException;
-import com.aliyuncs.exceptions.ServerException;
-import com.aliyuncs.http.MethodType;
-import com.aliyuncs.profile.DefaultProfile;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
@@ -45,7 +39,7 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
 
     @Value("${user.accessKeySecret}")
     private  String accessKeySecret;
- 
+
     @Value("${iot.productKey}")
     private String productKey;
 
@@ -56,7 +50,9 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
     public DefaultAcsClient getClient() {
 
         try {
-            DefaultProfile profile = DefaultProfile.getProfile(regionId, accessKeyID, accessKeySecret);
+            IClientProfile profile = DefaultProfile.getProfile(regionId, accessKeyID, accessKeySecret);
+            DefaultProfile.addEndpoint(regionId, regionId, productCode,
+                    domain);
             // 初始化client
             client = new DefaultAcsClient(profile);
 
@@ -65,9 +61,9 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
         }
         return client;
     }
+
     @Override
-    public List<CommonResponse> queryDevicePro(String deviceName) throws ClientException {
-	/*
+    public List<QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo> queryDevicePro(String deviceName) throws ClientException {
         QueryDevicePropertyStatusRequest queryDevicePropRequest=new QueryDevicePropertyStatusRequest();
         queryDevicePropRequest.setDeviceName(deviceName);
         queryDevicePropRequest.setProductKey(productKey);
@@ -81,37 +77,31 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
                 list = data.getList();
             }
         }
-	*/
-        return null;
+        return list;
     }
 
     @Override
     public  Boolean setDeviceProperty(String deviceName, String name, String value) throws ClientException {
-		CommonRequest request = new CommonRequest();
-        request.setSysMethod(MethodType.POST);
-        request.setSysDomain(domain);
-        request.setSysVersion("2018-01-20");
-        request.setSysAction("SetDeviceProperty");
-        request.putQueryParameter("RegionId", regionId);
-		String pol = "{\""+ name  +"\": "+ value +" }";
-        request.putQueryParameter("Items", pol );
-        request.putQueryParameter("ProductKey", productKey);
-        request.putQueryParameter("DeviceName", deviceName);
-        try {
-            CommonResponse response = client.getCommonResponse(request);
-			return true;
-        } catch (ServerException e) {
-            e.printStackTrace();
-        } catch (ClientException e) {
-            e.printStackTrace();
+        SetDevicePropertyRequest request=new SetDevicePropertyRequest();
+        request.setDeviceName(deviceName);
+        request.setProductKey(productKey);
+        request.setAcceptFormat(FormatType.JSON);
+
+        Map map =new HashMap();
+        map.put(name,value);
+        String s = JSON.toJSONString(map);
+        String s1 = s.replaceAll("\"", "");
+        request.setItems(s1);
+        SetDevicePropertyResponse acsResponse = client.getAcsResponse(request);
+        if(acsResponse != null){
+            return acsResponse.getSuccess();
+        }else {
+            return false;
         }
-		return false;
     }
 
     @Override
     public Boolean invokeThingService(String deviceName, String identifier, String args) throws ClientException {
-	
-	/*
         InvokeThingServiceRequest request = new InvokeThingServiceRequest();
         request.setProductKey(productKey);
         request.setDeviceName(deviceName);
@@ -124,14 +114,11 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
         }else {
             return false;
         }
-		*/
-		return false;
     }
 
 
     @Override
     public  Boolean pub(String deviceName, String identifier, String msg) throws ClientException {
-	/*
         String topic ="/"+productKey+"/"+deviceName+"/user/"+identifier;
         PubRequest request = new PubRequest();
         request.setProductKey(productKey);
@@ -143,7 +130,6 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
         if(acsResponse!=null){
             return acsResponse.getSuccess();
         }
-		*/
         return false;
     }
 
