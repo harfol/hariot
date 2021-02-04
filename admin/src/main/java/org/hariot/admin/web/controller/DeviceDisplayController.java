@@ -34,7 +34,6 @@ public class DeviceDisplayController {
     @Autowired
     public AlarmHistoryLogService alarmHistoryLogService;
 
-
     @Autowired
     public AliyunDeviceService aliyunDeviceService;
 
@@ -54,7 +53,6 @@ public class DeviceDisplayController {
     }
 
 
-
     //查询一段时间温湿度数据 deviceName,startTime,endTime请求参数  @DateTimeFormat配置请求参数日期访问格式
     //调用devicePropHistoryLogService.listDevicePropHistoryLogs方法获取数据
     @RequestMapping(value = "/api/v1/device/queryDevicePropHistoryLogs",method = RequestMethod.GET)
@@ -64,8 +62,6 @@ public class DeviceDisplayController {
        List<DevicePropHistoryLog> devicePropHistoryLogs=devicePropHistoryLogService.listDevicePropHistoryLogs(deviceName,startTime,endTime);
         return new BaseResp<>(0, "success",devicePropHistoryLogs);
     }
-
-
 
     //查询一段时间温湿度数据
     @RequestMapping(value = "/api/v1/device/queryAlarmHistoryLogs",method = RequestMethod.GET)
@@ -77,34 +73,17 @@ public class DeviceDisplayController {
 
    //Alink方式修改设备报警阀值，如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
     @RequestMapping(value = "/api/v1/device/setDeviceProperty",method = RequestMethod.GET)
-    public @ResponseBody BaseResp setDeviceProperty(String deviceName, Integer tempThreshold) {
+    public @ResponseBody BaseResp setDeviceProperty(String deviceName, String tempThreshold) {
         Boolean b = null;
         try {
-            b = aliyunDeviceService.setDeviceProperty(deviceName, "TempThreshold", tempThreshold.toString());
+            b = aliyunDeviceService.setDeviceProperty(deviceName, "TempThreshold", tempThreshold);
         } catch (ClientException e) {
             e.printStackTrace();
         }
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
         return new BaseResp<>(0, "success",map); }
-	
-    /*//透传方式修改设备报警阀值 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
-    @RequestMapping(value = "/api/v1/device/setDeviceProperty",method = RequestMethod.GET)
-    public @ResponseBody BaseResp setDeviceProperty(String deviceName, Float tempThreshold) {
-        Boolean b = null;
-        try {
-            b = aliyunDeviceService.pub(deviceName, "tempThresholdSet",
-                    Character.toString((char)tempThreshold.floatValue()));
-            if(b){
-                deviceInfoService.updateTempThreshold(deviceName,tempThreshold);
-            }
-        } catch (ClientException e) {
-            e.printStackTrace();
-        }
-        Map<String,Boolean> map=new HashMap();
-        map.put("isSuccess",b);
-        return new BaseResp<>(0, "success",map); }
-	*/
+
    //Alink方式设备报警状态取消 如果是Alink方式，请启用此段代码 如果是透传方式，请注释此段代码
    @RequestMapping(value = "/api/v1/device/clearAlarm",method = RequestMethod.GET)
     public @ResponseBody BaseResp clearAlarm(String deviceName) {
@@ -120,24 +99,5 @@ public class DeviceDisplayController {
         Map<String,Boolean> map=new HashMap();
         map.put("isSuccess",b);
         return new BaseResp<>(0, "success",map);}
-
-    /*//透传方式设备报警状态取消 如果是透传方式，请启用此段代码 如果是alink方式，请注释此段代码
-    @RequestMapping(value = "/api/v1/device/clearAlarm",method = RequestMethod.GET)
-    public @ResponseBody BaseResp clearAlarm(String deviceName) {
-        Boolean b = null;
-        try {
-            b = aliyunDeviceService.pub(deviceName, "clearAlarm", Character.toString((char)1));
-            if(b){
-                deviceInfoService.updateAlarmStatus(deviceName,null,false);
-            }
-        } catch (ClientException e) {
-            e.printStackTrace();
-        }
-        Map<String,Boolean> map=new HashMap();
-        map.put("isSuccess",b);
-        return new BaseResp<>(0, "success",map); }*/
-
-
-
 }
 

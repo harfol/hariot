@@ -1,9 +1,9 @@
 package org.hariot.admin.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.aliyuncs.http.FormatType;
-// import com.aliyuncs.iot.model.v20180120.*;
-// import com.aliyuncs.profile.IClientProfile;
+import com.aliyuncs.iot.model.v20180120.*;
 import org.hariot.admin.service.AliyunDeviceService;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
@@ -66,22 +66,26 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
         return client;
     }
     @Override
-    public List<CommonResponse> queryDevicePro(String deviceName) throws ClientException {
-	/*
-        QueryDevicePropertyStatusRequest queryDevicePropRequest=new QueryDevicePropertyStatusRequest();
-        queryDevicePropRequest.setDeviceName(deviceName);
-        queryDevicePropRequest.setProductKey(productKey);
-        queryDevicePropRequest.setAcceptFormat(FormatType.JSON);
-
-        List<QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo> list=new ArrayList<>();
-        QueryDevicePropertyStatusResponse acsResponse = client.getAcsResponse(queryDevicePropRequest);
-        if(acsResponse != null && acsResponse.getSuccess() != false){
-            QueryDevicePropertyStatusResponse.Data data = acsResponse.getData();
-            if(data!=null){
-                list = data.getList();
-            }
+    public List<QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo> queryDevicePro(String deviceName) throws ClientException {
+        CommonRequest request = new CommonRequest();
+        request.setSysMethod(MethodType.POST);
+        request.setSysDomain(domain);
+        request.setSysVersion("2018-01-20");
+        request.setSysAction("QueryDevicePropertyStatus");
+        request.putQueryParameter("RegionId", regionId);
+        request.putQueryParameter("ProductKey", productKey);
+        request.putQueryParameter("DeviceName", deviceName);
+        try {
+            CommonResponse response = client.getCommonResponse(request);
+            QueryDevicePropertyStatusResponse data =
+                JSON.parseObject(response.getData(), QueryDevicePropertyStatusResponse.class);
+            System.out.println(response.getData());
+            return data.getData().getList();
+        } catch (ServerException e) {
+            e.printStackTrace();
+        } catch (ClientException e) {
+            e.printStackTrace();
         }
-	*/
         return null;
     }
 
@@ -110,21 +114,25 @@ public class AliyunDeviceServiceImpl implements AliyunDeviceService{
 
     @Override
     public Boolean invokeThingService(String deviceName, String identifier, String args) throws ClientException {
-	
-	/*
-        InvokeThingServiceRequest request = new InvokeThingServiceRequest();
-        request.setProductKey(productKey);
-        request.setDeviceName(deviceName);
-        request.setIdentifier(identifier);
-        request.setArgs(args);
-        request.setAcceptFormat(FormatType.JSON);
-        InvokeThingServiceResponse acsResponse = client.getAcsResponse(request);
-        if(acsResponse != null){
-            return acsResponse.getSuccess();
-        }else {
-            return false;
+        CommonRequest request = new CommonRequest();
+        request.setSysMethod(MethodType.POST);
+        request.setSysDomain(domain);
+        request.setSysVersion("2018-01-20");
+        request.setSysAction("InvokeThingService");
+        request.putQueryParameter("RegionId", regionId);
+        request.putQueryParameter("Args", args);
+        request.putQueryParameter("Identifier", identifier);
+        request.putQueryParameter("ProductKey", productKey);
+        request.putQueryParameter("DeviceName", deviceName);
+        try {
+            CommonResponse response = client.getCommonResponse(request);
+            System.out.println(response.getData());
+            return  true;
+        } catch (ServerException e) {
+            e.printStackTrace();
+        } catch (ClientException e) {
+            e.printStackTrace();
         }
-		*/
 		return false;
     }
 

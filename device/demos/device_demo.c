@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <signal.h> 
@@ -9,7 +10,6 @@
 #include "aiot_mqtt_api.h"
 #include "aiot_dm_api.h"
 
-#include "execute.h"
 
 /* 位于portfiles/aiot_port文件夹下的系统适配函数集合 */
 extern aiot_sysdep_portfile_t g_aiot_sysdep_portfile;
@@ -29,7 +29,44 @@ int32_t demo_state_logcb(int32_t code, char *message)
     printf("%s", message);
     return 0;
 }
+/* 属性上报函数演示 */
+int32_t demo_send_property_post(void *dm_handle, char *params)
+{
+    aiot_dm_msg_t msg;
 
+    memset(&msg, 0, sizeof(aiot_dm_msg_t));
+    msg.type = AIOT_DMMSG_PROPERTY_POST;
+    msg.data.property_post.params = params;
+
+    return aiot_dm_send(dm_handle, &msg);
+}
+
+/* 事件上报函数演示 */
+int32_t demo_send_event_post(void *dm_handle, char *event_id, char *params)
+{
+    aiot_dm_msg_t msg;
+
+    memset(&msg, 0, sizeof(aiot_dm_msg_t));
+    msg.type = AIOT_DMMSG_EVENT_POST;
+    msg.data.event_post.event_id = event_id;
+    msg.data.event_post.params = params;
+
+    return aiot_dm_send(dm_handle, &msg);
+}
+
+static int get_value(char *raw, const char *key)
+{
+	int i = 0;
+	char value[10] = {'\0'};
+	char *dst_s = strstr(raw, key);
+	dst_s = dst_s + strlen(key) + 2;
+	for( i = 0; *dst_s >= '0' && *dst_s <= '9'; i++ )
+	{
+		value[i] = *(dst_s++);
+	}
+	i = atoi(value);
+	return i;
+}
 /* MQTT事件回调函数, 当网络连接/重连/断开时被触发, 事件定义见core/aiot_mqtt_api.h */
 void demo_mqtt_event_handler(void *handle, const aiot_mqtt_event_t *event, void *userdata)
 {
@@ -117,23 +154,10 @@ static void demo_dm_recv_handler(void *dm_handle, const aiot_dm_recv_t *recv, vo
                    (unsigned long)recv->data.property_set.msg_id,
                    recv->data.property_set.params_len,
                    recv->data.property_set.params);
-
-            /* TODO: 以下代码演示如何对来自云平台的属性设置指令进行应答, 用户可取消注释查看演示效果 */
-            /*
-            {
-                aiot_dm_msg_t msg;
-
-                memset(&msg, 0, sizeof(aiot_dm_msg_t));
-                msg.type = AIOT_DMMSG_PROPERTY_SET_REPLY;
-                msg.data.property_set_reply.msg_id = recv->data.property_set.msg_id;
-                msg.data.property_set_reply.code = 200;
-                msg.data.property_set_reply.data = "{}";
-                int32_t res = aiot_dm_send(dm_handle, &msg);
-                if (res < 0) {
-                    printf("aiot_dm_send failed\r\n");
-                }
-            }
-            */
+			ala_tmp = get_value(recv->data.property_set.params, "TempThreshold");		
+			char tmp[100] = {'\0'};
+			sprintf(tmp, "{\"CurrentTemperature\": %d, \"CurrentHumidity\": 95, \"TempThreshold\": %d}", cur_tmp, ala_tmp);
+    		demo_send_property_post(dm_handle, tmp);
         }
         break;
 
@@ -149,8 +173,6 @@ static void demo_dm_recv_handler(void *dm_handle, const aiot_dm_recv_t *recv, vo
              *
              * 注意: 如果用户在回调函数外进行应答, 需要自行保存msg_id, 因为回调函数入参在退出回调函数后将被SDK销毁, 不可以再访问到
              */
-
-            
             {
                 aiot_dm_msg_t msg;
 
@@ -158,8 +180,9 @@ static void demo_dm_recv_handler(void *dm_handle, const aiot_dm_recv_t *recv, vo
                 msg.type = AIOT_DMMSG_ASYNC_SERVICE_REPLY;
                 msg.data.async_service_reply.msg_id = recv->data.async_service_invoke.msg_id;
                 msg.data.async_service_reply.code = 200;
-                msg.data.async_service_reply.service_id = "ToggleLightSwitch";
-                msg.data.async_service_reply.data = "{\"dataA\": 20}"; int32_t res = aiot_dm_send(dm_handle, &msg); 
+                msg.data.async_service_reply.service_id = "ClearAlarm";
+                msg.data.async_service_reply.data = "{\"ClearAlarm\": true}"; 
+				int32_t res = aiot_dm_send(dm_handle, &msg); 
 				if (res < 0) {
                     printf("aiot_dm_send failed\r\n");
                 }
@@ -270,30 +293,6 @@ void demo_mqtt_default_recv_handler(void *handle, const aiot_mqtt_recv_t *packet
     }
 }
 
-/* 属性上报函数演示 */
-int32_t demo_send_property_post(void *dm_handle, char *params)
-{
-    aiot_dm_msg_t msg;
-
-    memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_PROPERTY_POST;
-    msg.data.property_post.params = params;
-
-    return aiot_dm_send(dm_handle, &msg);
-}
-
-/* 事件上报函数演示 */
-int32_t demo_send_event_post(void *dm_handle, char *event_id, char *params)
-{
-    aiot_dm_msg_t msg;
-
-    memset(&msg, 0, sizeof(aiot_dm_msg_t));
-    msg.type = AIOT_DMMSG_EVENT_POST;
-    msg.data.event_post.event_id = event_id;
-    msg.data.event_post.params = params;
-
-    return aiot_dm_send(dm_handle, &msg);
-}
 
 /* 演示了获取属性LightSwitch的期望值, 用户可将此函数加入到函数中运行演示 */
 int32_t demo_send_get_desred_requset(void *dm_handle)
@@ -491,7 +490,7 @@ int main(int argc, char *argv[])
 		if( cur_tmp != old_tmp )
 		{
 			char tmp[100] = {'\0'};
-			sprintf(tmp, "{\"CurrentTemperature\": %d, \"CurrentHumidity\": 95 }", cur_tmp);
+			sprintf(tmp, "{\"CurrentTemperature\": %d, \"CurrentHumidity\": 95, \"TempThreshold\": %d}", cur_tmp, ala_tmp);
     		demo_send_property_post(dm_handle, tmp);
 			old_tmp = cur_tmp;
 		}

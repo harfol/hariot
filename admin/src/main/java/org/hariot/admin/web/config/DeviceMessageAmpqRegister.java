@@ -74,7 +74,7 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
 	private String clientId;
     
 	@Value("${iot.ampq.domain}")
-    private String domain;
+    private String ampqDomain;
 
     @Autowired
     private Topic topic;
@@ -117,7 +117,7 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
         String signContent = "authId=" + accessKey + "&timestamp=" + timeStamp;
         String password = doSign(signContent,accessSecret, signMethod);
         //接入域名，请参见AMQP客户端接入说明文档。
-        String connectionUrl = "failover:(amqps://" + uid +"." + domain + ":5671?amqp.idleTimeout=80000)"
+        String connectionUrl = "failover:(amqps://" + uid +"." + ampqDomain + ":5671?amqp.idleTimeout=80000)"
             + "?failover.reconnectDelay=30";
 
 		logger.info(connectionUrl);
@@ -165,9 +165,11 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
                 + ", content = " + content);
 			String[] token = top.split("/");
 			int token_size = token.length;
+			logger.info(Integer.toString(token_size));
+			logger.info(Arrays.toString(token));
 			switch( token_size ){
 				case 6:{
-					// /as/mqtt/status/a1vZTRTxXyE/SrMwDFMVGJekOz1gJuhs
+					//as/mqtt/status/a1vZTRTxXyE/SrMwDFMVGJekOz1gJuhs
 					if( token[1].equals("as") && token[2].equals("mqtt") && token[3].equals("status") ){
             		    DeviceStatusPost deviceStatus = JSON.parseObject(content, DeviceStatusPost.class);
             		    String status = deviceStatus.getStatus();
@@ -178,15 +180,12 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
 				case 7: {
             		//属性上报  topic:   /productKey/#/thing/event/property/post
 					if( token[3].equals("thing") &&  token[4].equals("event")  && token[5].equals("property") && token[6].equals("post") ){
-                		//logger.info("receive 属性上报" + content);
                 		DevicePropertyPost devicePropertyPost = JSON.parseObject(content, DevicePropertyPost.class);
                 		Boolean isUpdateDeviceProperty = deviceInfoService.updateOrInsertDeviceProperty(devicePropertyPost);
                 		Boolean isUpdateDevicePropHistoryLog = devicePropHistoryLogService.insertDevicePropHistoryLog(devicePropertyPost);
 					}
             		//事件上报  topic: /a1vZTRTxXyE/${deviceName}/thing/event/${tsl.event.identifier}/post
 					else if( token[3].equals("thing")  && token[4].equals("event") && token[6].equals("post") ){
-                		//logger.info("receive 属性上报" + content);
-                		//logger.info("receive 设备事件上报" + content);
                 		DeviceEvent deviceEvent = JSON.parseObject(content, DeviceEvent.class);
                     	//alarmHistoryLogService.insertAlarmHistoryLogByAliyunQuery(deviceEvent);
                     	alarmHistoryLogService.insertAlarmHistoryLogByMysqlQuery(deviceEvent);
@@ -195,8 +194,6 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
 				};break;
 				default : break;
 			}
-			logger.info(Integer.toString(token_size));
-			logger.info(Arrays.toString(token));
         } catch (Exception e) {
             logger.error("processMessage occurs error ", e);
         }
@@ -263,7 +260,6 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
 
         /*
 
-
         //设备生命周期上报 {payload={"iotId":"DszqFgXkdL0fv6TGaSI70010f4b200","action":"delete","messageCreateTime":1547196768873,
         // "productKey":"a1I64MeQmoo","deviceName":"test_zhinengjiaju"}
         client.setMessageListener(topic.getDeviceLifecyclePostTopic(), new MessageCallback() {
@@ -278,40 +274,6 @@ public class DeviceMessageAmpqRegister implements InitializingBean {
                 }
                 return Action.CommitFailure;
 
-            }
-        });
-
-        client.setMessageListener(topic.getTempHumUploadTopic(), new MessageCallback() {
-            @Override
-            public Action consume(MessageToken messageToken) {
-                Message m = messageToken.getMessage();
-                logger.info("receive 设备透传方式上报温湿度" + new String(messageToken.getMessage().getPayload()));
-                //收到数据以后转化格式
-                DevicePropertyPost devicePropertyPost = AliyunMessageTransformUtils.getDevicePropertyPost(m, productKey);
-                //更新设备信息表
-                Boolean isUpdateDeviceProperty = deviceInfoService.updateOrInsertDeviceProperty(devicePropertyPost);
-                //更新设备历史温湿度表
-                Boolean isUpdateDevicePropHistoryLog = devicePropHistoryLogService.insertDevicePropHistoryLog(devicePropertyPost);
-                if (isUpdateDeviceProperty && isUpdateDevicePropHistoryLog) {
-                    return Action.CommitSuccess;
-                }
-                return Action.CommitFailure; }});
-
-
-        client.setMessageListener(topic.getTempAlarmTopic(), new MessageCallback() {
-            @Override
-            public Action consume(MessageToken messageToken) {
-                Message m = messageToken.getMessage();
-                logger.info("receive 透传方式设备报警" + new String(messageToken.getMessage().getPayload()));
-                DeviceEvent deviceEvent = AliyunMessageTransformUtils.getDeviceEvent(m, productKey);
-                Boolean isInsertAlarmHistoryLog = null;
-                Boolean isUpdateAlarmStatus = null;
-                isInsertAlarmHistoryLog = alarmHistoryLogService.insertAlarmHistoryLogByMysqlQuery(deviceEvent);
-                isUpdateAlarmStatus = deviceInfoService.updateAlarmStatus(deviceEvent.getDeviceName(), null,true);
-                if (isInsertAlarmHistoryLog && isUpdateAlarmStatus) {
-                    return Action.CommitSuccess;
-                }
-                return Action.CommitFailure;
             }
         });
 

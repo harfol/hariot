@@ -46,7 +46,6 @@ public class AlarmHistoryLogServiceImpl implements AlarmHistoryLogService {
 
     @Override
     public Boolean insertAlarmHistoryLogByAliyunQuery(DeviceEvent deviceEvent) throws ClientException {
-    /*
 	 	AlarmHistoryLog alarmHistoryLog=new AlarmHistoryLog();
         List<QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo> propertyStatusInfos = aliyunDeviceService.queryDevicePro(deviceEvent.getDeviceName());
         for (QueryDevicePropertyStatusResponse.Data.PropertyStatusInfo propertyStatusInfo: propertyStatusInfos) {
@@ -64,7 +63,6 @@ public class AlarmHistoryLogServiceImpl implements AlarmHistoryLogService {
         if(i!=1){
             return false;
         }
-		*/
         return true;
     }
 
