@@ -1,5 +1,6 @@
 FROM gcc:latest
 
-WORKDIR /root
+WORKDIR /home/slave
 COPY bin .
-CMD ["bash", "/root/slave-start.sh"]
+COPY script .
+CMD ["bash", "slave-start.sh"]

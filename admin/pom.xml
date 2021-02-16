@@ -6,7 +6,7 @@
 
     <groupId>org.hariot</groupId>
     <artifactId>admin</artifactId>
-    <version>latest-SNAPSHOT</version>
+	<version>${admin.version}</version>
     <packaging>jar</packaging>
 
     <parent>
@@ -17,6 +17,7 @@
     </parent>
     <properties>
         <java.version>8</java.version>
+		<admin.version>latest-SNAPSHOT</admin.version>
 	</properties>
 	<dependencies>
         <dependency>

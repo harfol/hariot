@@ -1,17 +1,19 @@
 FROM openjdk:8-jdk-alpine
+MAINTAINER harfol 1148706823@qq.com
 
-WORKDIR /root
+WORKDIR /home/admin
 COPY bin .
+COPY script .
 
-ENV ADMIN_HOST 0.0.0.0
-ENV ADMIN_PORT 8080
+ENV HARIOT_ADMIN_JAR=admin-${version:-latest-SNAPSHOT}.jar
 
-ENV DB_HOST hariot_db
-ENV DB_PORT 3306
-ENV DB_NAME hariot_iot_database
-ENV DB_USER admin
-ENV DB_PASSWORD 123456
+
+ENV HARIOT_DATABASE_URL=jdbc:mysql://${HARIOT_DATABASE_HOST}:${HARIOT_DATABASE_POST}/${HARIOT_DATABASE}\
+?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true\
+&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "admin-latest-SNAPSHOT.jar"]
+RUN chmod a+x admin-start.sh
+
+CMD ["/bin/sh",  "admin-start.sh"]
